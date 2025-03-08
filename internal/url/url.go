@@ -10,6 +10,12 @@ import (
 	"strings"
 )
 
+var whitelistedProtocol map[string]bool = map[string]bool{
+	"http":  true,
+	"https": true,
+	"file":  true,
+}
+
 type u struct {
 	host     string
 	path     string
@@ -34,7 +40,7 @@ func New(rawURL string) (URL, error) {
 func parseRawURL(rawURL string) (URL, error) {
 	scheme := strings.SplitN(rawURL, "://", 2)
 	protocol := scheme[0]
-	if protocol != "http" && protocol != "https" {
+	if _, exist := whitelistedProtocol[protocol]; !exist {
 		return nil, errors.New("invalid protocol")
 	}
 
@@ -64,7 +70,6 @@ func parseRawURL(rawURL string) (URL, error) {
 		port:     port,
 		protocol: protocol,
 	}
-	fmt.Println(parsedURL.port, parsedURL.host, parsedURL.path)
 
 	return &parsedURL, nil
 }
@@ -116,6 +121,7 @@ func (ur *u) Request() (string, error) {
 		return "", errors.New("something really bad happened")
 	}
 	version, statusCode, explanation := statusLine[0], statusLine[1], statusLine[2]
+	// TODO: Put in response struct or something later
 	fmt.Println(version, statusCode, explanation)
 
 	i := 1
@@ -141,4 +147,29 @@ func (ur *u) Request() (string, error) {
 	body := responses[i:]
 
 	return strings.Join(body, ""), nil
+}
+
+func Show(body string) string {
+	parsedBody := ""
+	inTag := false
+	for _, c := range body {
+		if c == '<' {
+			inTag = true
+		} else if c == '>' {
+			inTag = false
+		} else if !inTag {
+			parsedBody += string(c)
+		}
+	}
+
+	return parsedBody
+}
+
+func Load(u URL) (string, error) {
+	content, err := u.Request()
+	if err != nil {
+		return "", err
+	}
+
+	return Show(content), nil
 }

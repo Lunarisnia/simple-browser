@@ -25,13 +25,30 @@ func Test_NewURL(t *testing.T) {
 
 func Test_Request(t *testing.T) {
 	t.Run("Succeeded in requesting", func(t *testing.T) {
-		u, err := New("http://example.org/index.html")
+		u, err := New("https://example.org/index.html")
 
-		_, err = u.Request()
+		content, err := u.Request()
 		if err != nil {
 			fmt.Println(err)
 		}
 
+		assert.NotEqual(t, "", content)
 		assert.Nil(t, err)
+	})
+}
+
+func Test_OpenFile(t *testing.T) {
+	t.Run("Succeeded in opening file", func(t *testing.T) {
+		u, err := New("file:///Users/louna/Louna-iTerm2.json")
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		body, err := Load(u)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		fmt.Println(body)
 	})
 }
