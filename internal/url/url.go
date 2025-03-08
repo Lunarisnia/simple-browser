@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"strings"
 )
 
@@ -42,6 +43,15 @@ func parseRawURL(rawURL string) (URL, error) {
 	protocol := scheme[0]
 	if _, exist := whitelistedProtocol[protocol]; !exist {
 		return nil, errors.New("invalid protocol")
+	}
+
+	if protocol == "file" {
+		parsedURL := u{
+			host:     "",
+			path:     scheme[len(scheme)-1],
+			protocol: protocol,
+		}
+		return &parsedURL, nil
 	}
 
 	scheme = strings.SplitN(scheme[len(scheme)-1], "/", 2)
@@ -91,7 +101,7 @@ func (ur *u) Request() (string, error) {
 			return "", err
 		}
 		defer conn.Close()
-	} else {
+	} else if ur.protocol == "https" {
 		conn, err = tls.Dial("tcp", ur.host+":"+ur.port, &tls.Config{
 			// FIXME: Bad for production
 			InsecureSkipVerify: true,
@@ -100,6 +110,12 @@ func (ur *u) Request() (string, error) {
 			return "", err
 		}
 		defer conn.Close()
+	} else if ur.protocol == "file" {
+		f, err := os.ReadFile(ur.path)
+		if err != nil {
+			return "", err
+		}
+		return string(f), nil
 	}
 	fmt.Fprintf(conn, "GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\nUser-Agent: Ignis/SimpleBrowser\r\n\r\n", ur.path, ur.host)
 
