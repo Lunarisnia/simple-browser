@@ -96,7 +96,7 @@ func (ur *u) Request() (string, error) {
 		}
 		defer conn.Close()
 	}
-	fmt.Fprintf(conn, "GET %s HTTP/1.0\r\nHost: %s\r\n\r\n", ur.path, ur.host)
+	fmt.Fprintf(conn, "GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\nUser-Agent: Ignis/SimpleBrowser\r\n\r\n", ur.path, ur.host)
 
 	responses := make([]string, 0)
 	reader := bufio.NewReader(conn)
@@ -119,7 +119,7 @@ func (ur *u) Request() (string, error) {
 	fmt.Println(version, statusCode, explanation)
 
 	i := 1
-	headers := make(map[string]string)
+	responseHeaders := make(map[string]string)
 	for i < len(responses) {
 		line := responses[i]
 		i++
@@ -128,13 +128,13 @@ func (ur *u) Request() (string, error) {
 		}
 		keyVal := strings.SplitN(line, ":", 2)
 		key, value := keyVal[0], keyVal[len(keyVal)-1]
-		headers[strings.ToLower(key)] = strings.TrimSpace(value)
+		responseHeaders[strings.ToLower(key)] = strings.TrimSpace(value)
 	}
 
-	if _, exist := headers["transfer-encoding"]; exist {
+	if _, exist := responseHeaders["transfer-encoding"]; exist {
 		return "", errors.ErrUnsupported
 	}
-	if _, exist := headers["content-encoding"]; exist {
+	if _, exist := responseHeaders["content-encoding"]; exist {
 		return "", errors.ErrUnsupported
 	}
 
