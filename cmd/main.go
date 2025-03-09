@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	u, err := url.New("data:text/html,&lt;div&gt;")
+	u, err := url.New("data:text/html,&lt;div&gt;;;;")
 	if err != nil {
 		log.Fatal(err)
 	}

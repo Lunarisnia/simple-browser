@@ -200,7 +200,7 @@ func Show(body string) string {
 			inTag = false
 		} else if c == '&' {
 			isEscaped = true
-		} else if c == ';' {
+		} else if c == ';' && isEscaped {
 			isEscaped = false
 		} else if isEscaped {
 			escapeChar += string(c)
