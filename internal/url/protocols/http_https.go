@@ -2,6 +2,8 @@ package protocols
 
 import (
 	"bufio"
+	"bytes"
+	"compress/gzip"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -43,7 +45,7 @@ func (h *HTTP) Path() string {
 }
 
 func (h *HTTP) SetHeader(key string, value string) {
-	h.ReqHeaders[key] = value
+	h.ReqHeaders[strings.ToLower(key)] = value
 }
 
 func (h *HTTP) Request() (string, error) {
@@ -90,6 +92,7 @@ func (h *HTTP) Request() (string, error) {
 		message, err := reader.ReadString('\n')
 		if err != nil {
 			if errors.Is(err, io.EOF) {
+				responses = append(responses, message)
 				break
 			}
 			return "", err
@@ -118,16 +121,50 @@ func (h *HTTP) Request() (string, error) {
 		h.RespHeaders[strings.ToLower(key)] = strings.TrimSpace(value)
 	}
 
-	if _, exist := h.RespHeaders["transfer-encoding"]; exist {
-		return "", errors.ErrUnsupported
-	}
-	if _, exist := h.RespHeaders["content-encoding"]; exist {
-		return "", errors.ErrUnsupported
+	body := strings.Join(responses[i:], "")
+
+	needCompression := false
+	if transferEncoding, exist := h.RespHeaders["transfer-encoding"]; exist {
+		if acceptEncoding, isAllowed := h.ReqHeaders["accept-encoding"]; isAllowed && acceptEncoding == transferEncoding {
+			needCompression = true
+		} else {
+			return "", errors.ErrUnsupported
+		}
 	}
 
-	body := responses[i:]
+	if contentEncoding, exist := h.RespHeaders["content-encoding"]; exist {
+		if acceptEncoding, isAllowed := h.ReqHeaders["accept-encoding"]; isAllowed && acceptEncoding == contentEncoding {
+			needCompression = true
+		} else {
+			return "", errors.ErrUnsupported
+		}
+	}
 
-	return strings.Join(body, ""), nil
+	if needCompression {
+		bufferString := bytes.NewBufferString(body)
+		zr, err := gzip.NewReader(bufferString)
+		if err != nil {
+			fmt.Println("ERR 1: ", err)
+			return "", err
+		}
+
+		b := bytes.NewBufferString("")
+		rw := bufio.NewReadWriter(bufio.NewReader(b), bufio.NewWriter(b))
+		_, err = io.Copy(rw, zr)
+		if err != nil {
+			return "", err
+		}
+
+		content, err := io.ReadAll(rw)
+		if err != nil {
+			fmt.Println("ERR 3: ", err)
+			return "", err
+		}
+
+		body = string(content)
+	}
+
+	return body, nil
 }
 
 func (h *HTTP) StatusCode() string {
