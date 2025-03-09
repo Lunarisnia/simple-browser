@@ -67,3 +67,18 @@ func Test_DirectTextHTML(t *testing.T) {
 		fmt.Println(body)
 	})
 }
+
+func Test_ViewSource(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		u, err := New("view-source:https://example.org")
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		body, err := Load(u)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(body)
+	})
+}
