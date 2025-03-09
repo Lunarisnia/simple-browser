@@ -19,6 +19,7 @@ type HTTP struct {
 	statusCode string
 
 	RespHeaders map[string]string
+	ReqHeaders  map[string]string
 }
 
 func NewHTTP(host string, path string, port string, protocol string) *HTTP {
@@ -29,6 +30,7 @@ func NewHTTP(host string, path string, port string, protocol string) *HTTP {
 		protocol:    protocol,
 		statusCode:  "",
 		RespHeaders: make(map[string]string),
+		ReqHeaders:  make(map[string]string),
 	}
 }
 
@@ -38,6 +40,10 @@ func (h *HTTP) Host() string {
 
 func (h *HTTP) Path() string {
 	return h.path
+}
+
+func (h *HTTP) SetHeader(key string, value string) {
+	h.ReqHeaders[key] = value
 }
 
 func (h *HTTP) Request() (string, error) {
@@ -67,7 +73,16 @@ func (h *HTTP) Request() (string, error) {
 	} else if h.protocol == "data" {
 		return h.path, nil
 	}
-	fmt.Fprintf(conn, "GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\nUser-Agent: Ignis/SimpleBrowser\r\n\r\n", h.path, h.host)
+	reqHeaders := ""
+	for k, v := range h.ReqHeaders {
+		reqHeaders += fmt.Sprintf("%s: %s\r\n", k, v)
+	}
+	if _, exist := h.ReqHeaders["connection"]; !exist {
+		reqHeaders += "Connection: close\r\n"
+	}
+	reqHeaders += fmt.Sprintf("Host: %s\r\n", h.host)
+	reqHeaders += fmt.Sprintf("User-Agent: %s\r\n", "Ignis/SimpleBrowser")
+	fmt.Fprintf(conn, "GET %s HTTP/1.1\r\n%s\r\n", h.path, reqHeaders)
 
 	responses := make([]string, 0)
 	reader := bufio.NewReader(conn)
@@ -125,4 +140,12 @@ func (h *HTTP) ResponseHeaders() map[string]string {
 
 func (h *HTTP) Protocol() string {
 	return h.protocol
+}
+
+func (h *HTTP) RequestHeaders() map[string]string {
+	return h.ReqHeaders
+}
+
+func (h *HTTP) SetHeaders(headers map[string]string) {
+	h.ReqHeaders = headers
 }

@@ -1,6 +1,9 @@
 package protocols
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 var charToEscape map[rune]string = map[rune]string{
 	'<': "&lt;",
@@ -50,6 +53,19 @@ func (v *ViewSource) ResponseHeaders() map[string]string {
 
 func (v *ViewSource) Protocol() string {
 	return "view-source:" + v.protocol
+}
+
+func (v *ViewSource) SetHeader(key string, value string) {
+	fmt.Println("Unimplemented")
+}
+
+func (v *ViewSource) SetHeaders(headers map[string]string) {
+	fmt.Println("Unimplemented")
+}
+
+func (v *ViewSource) RequestHeaders() map[string]string {
+	fmt.Println("Unimplemented")
+	return map[string]string{}
 }
 
 func escapeCharacters(body string) string {

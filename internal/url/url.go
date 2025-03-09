@@ -35,6 +35,9 @@ type URL interface {
 	Protocol() string
 	StatusCode() string
 	ResponseHeaders() map[string]string
+	SetHeader(key string, value string)
+	RequestHeaders() map[string]string
+	SetHeaders(headers map[string]string)
 }
 
 func New(rawURL string) (URL, error) {
@@ -143,7 +146,9 @@ func Load(u URL) (string, error) {
 			if newLocation[0] == '/' {
 				newLocation = u.Protocol() + "://" + u.Host() + newLocation
 			}
+			oldHeaders := u.RequestHeaders()
 			u, err = New(newLocation)
+			u.SetHeaders(oldHeaders)
 			if err != nil {
 				return "", err
 			}

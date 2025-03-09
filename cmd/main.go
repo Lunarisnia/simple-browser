@@ -9,6 +9,7 @@ import (
 func main() {
 	// u, err := url.New("data:text/html,&lt;div&gt;;;;")
 	u, err := url.New("http://browser.engineering/redirect3")
+	// u.SetHeader("Connection", "close")
 	if err != nil {
 		log.Fatal(err)
 	}
