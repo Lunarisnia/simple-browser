@@ -18,6 +18,11 @@ var whitelistedProtocol map[string]bool = map[string]bool{
 	"data":  true,
 }
 
+var escapeCharMap map[string]rune = map[string]rune{
+	"lt": '<',
+	"gt": '>',
+}
+
 type u struct {
 	host     string
 	path     string
@@ -185,13 +190,25 @@ func (ur *u) Request() (string, error) {
 
 func Show(body string) string {
 	parsedBody := ""
+	escapeChar := ""
 	inTag := false
+	isEscaped := false
 	for _, c := range body {
 		if c == '<' {
 			inTag = true
 		} else if c == '>' {
 			inTag = false
-		} else if !inTag {
+		} else if c == '&' {
+			isEscaped = true
+		} else if c == ';' {
+			isEscaped = false
+		} else if isEscaped {
+			escapeChar += string(c)
+			if v, exist := escapeCharMap[escapeChar]; exist {
+				parsedBody += string(v)
+				escapeChar = ""
+			}
+		} else if !inTag && !isEscaped {
 			parsedBody += string(c)
 		}
 	}
