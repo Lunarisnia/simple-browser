@@ -8,10 +8,11 @@ import (
 )
 
 var whitelistedProtocol map[string]bool = map[string]bool{
-	"http":  true,
-	"https": true,
-	"file":  true,
-	"data":  true,
+	"http":        true,
+	"https":       true,
+	"file":        true,
+	"data":        true,
+	"view-source": true,
 }
 
 var escapeCharMap map[string]rune = map[string]rune{
@@ -34,9 +35,14 @@ func New(rawURL string) (URL, error) {
 }
 
 func parseRawURL(rawURL string) (URL, error) {
+	var clientProtocol string
 	var scheme []string
 	if strings.HasPrefix(rawURL, "data:") {
 		scheme = strings.SplitN(rawURL, ":", 2)
+	} else if strings.HasPrefix(rawURL, "view-source:") {
+		scheme = strings.SplitN(rawURL, ":", 2)
+		clientProtocol = scheme[0]
+		scheme = strings.SplitN(scheme[len(scheme)-1], "://", 2)
 	} else {
 		scheme = strings.SplitN(rawURL, "://", 2)
 	}
@@ -74,6 +80,11 @@ func parseRawURL(rawURL string) (URL, error) {
 		port = "80"
 	} else if port == "" && protocol == "https" {
 		port = "443"
+	}
+
+	if clientProtocol == "view-source" {
+		parsedURL := protocols.NewViewSource(host, path, port, protocol)
+		return parsedURL, nil
 	}
 
 	parsedURL := protocols.NewHTTP(host, path, port, protocol)

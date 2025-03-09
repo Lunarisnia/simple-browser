@@ -12,18 +12,20 @@ import (
 )
 
 type HTTP struct {
-	host     string
-	path     string
-	port     string
-	protocol string
+	host            string
+	path            string
+	port            string
+	protocol        string
+	ResponseHeaders map[string]string
 }
 
 func NewHTTP(host string, path string, port string, protocol string) *HTTP {
 	return &HTTP{
-		host:     host,
-		path:     path,
-		port:     port,
-		protocol: protocol,
+		host:            host,
+		path:            path,
+		port:            port,
+		protocol:        protocol,
+		ResponseHeaders: make(map[string]string),
 	}
 }
 
@@ -86,7 +88,6 @@ func (h *HTTP) Request() (string, error) {
 	fmt.Println(version, statusCode, explanation)
 
 	i := 1
-	responseHeaders := make(map[string]string)
 	for i < len(responses) {
 		line := responses[i]
 		i++
@@ -95,13 +96,13 @@ func (h *HTTP) Request() (string, error) {
 		}
 		keyVal := strings.SplitN(line, ":", 2)
 		key, value := keyVal[0], keyVal[len(keyVal)-1]
-		responseHeaders[strings.ToLower(key)] = strings.TrimSpace(value)
+		h.ResponseHeaders[strings.ToLower(key)] = strings.TrimSpace(value)
 	}
 
-	if _, exist := responseHeaders["transfer-encoding"]; exist {
+	if _, exist := h.ResponseHeaders["transfer-encoding"]; exist {
 		return "", errors.ErrUnsupported
 	}
-	if _, exist := responseHeaders["content-encoding"]; exist {
+	if _, exist := h.ResponseHeaders["content-encoding"]; exist {
 		return "", errors.ErrUnsupported
 	}
 
