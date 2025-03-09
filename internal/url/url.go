@@ -2,7 +2,6 @@ package url
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/Lunarisnia/simple-browser/internal/url/protocols"
@@ -135,7 +134,6 @@ func Load(u URL) (string, error) {
 			newLocation := u.ResponseHeaders()["location"]
 			if newLocation[0] == '/' {
 				newLocation = u.Protocol() + "://" + u.Host() + newLocation
-				fmt.Println("TRUE: ", newLocation)
 			}
 			u, err = New(newLocation)
 			if err != nil {
