@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/Lunarisnia/simple-browser/internal/url"
@@ -13,10 +12,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	body, err := url.Load(u)
+	_, err = url.Load(u)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(body)
+	// fmt.Println(body)
 	// fmt.Println("Content: ", content)
 }

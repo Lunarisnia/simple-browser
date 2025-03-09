@@ -2,8 +2,10 @@ package url
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 
+	"github.com/Lunarisnia/simple-browser/internal/caches"
 	"github.com/Lunarisnia/simple-browser/internal/url/protocols"
 )
 
@@ -18,6 +20,12 @@ var whitelistedProtocol map[string]bool = map[string]bool{
 var escapeCharMap map[string]rune = map[string]rune{
 	"lt": '<',
 	"gt": '>',
+}
+
+var cache caches.CacheBox
+
+func init() {
+	cache = caches.New()
 }
 
 type URL interface {
@@ -141,6 +149,19 @@ func Load(u URL) (string, error) {
 			}
 			redirectionCounter++
 		} else {
+			if v, exist := u.ResponseHeaders()["cache-control"]; exist {
+				if v != "no-store" && strings.Contains(v, "max-age") {
+					maxAgeStr := strings.TrimPrefix(v, "max-age=")
+					maxAge, err := strconv.Atoi(maxAgeStr)
+					if err != nil {
+						return "", err
+					}
+					cachePath := map[string]string{
+						u.Path(): content,
+					}
+					cache.Set(u.Host(), cachePath, maxAge)
+				}
+			}
 			return Show(content), nil
 		}
 
