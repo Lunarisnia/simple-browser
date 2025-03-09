@@ -15,6 +15,7 @@ var whitelistedProtocol map[string]bool = map[string]bool{
 	"http":  true,
 	"https": true,
 	"file":  true,
+	"data":  true,
 }
 
 type u struct {
@@ -39,7 +40,12 @@ func New(rawURL string) (URL, error) {
 }
 
 func parseRawURL(rawURL string) (URL, error) {
-	scheme := strings.SplitN(rawURL, "://", 2)
+	var scheme []string
+	if strings.HasPrefix(rawURL, "data:") {
+		scheme = strings.SplitN(rawURL, ":", 2)
+	} else {
+		scheme = strings.SplitN(rawURL, "://", 2)
+	}
 	protocol := scheme[0]
 	if _, exist := whitelistedProtocol[protocol]; !exist {
 		return nil, errors.New("invalid protocol")
@@ -48,6 +54,16 @@ func parseRawURL(rawURL string) (URL, error) {
 	if protocol == "file" {
 		parsedURL := u{
 			host:     "",
+			path:     scheme[len(scheme)-1],
+			protocol: protocol,
+		}
+		return &parsedURL, nil
+	}
+
+	if protocol == "data" {
+		scheme = strings.SplitN(rawURL, ",", 2)
+		parsedURL := u{
+			host:     scheme[0],
 			path:     scheme[len(scheme)-1],
 			protocol: protocol,
 		}
@@ -116,6 +132,8 @@ func (ur *u) Request() (string, error) {
 			return "", err
 		}
 		return string(f), nil
+	} else if ur.protocol == "data" {
+		return ur.path, nil
 	}
 	fmt.Fprintf(conn, "GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\nUser-Agent: Ignis/SimpleBrowser\r\n\r\n", ur.path, ur.host)
 

@@ -52,3 +52,18 @@ func Test_OpenFile(t *testing.T) {
 		fmt.Println(body)
 	})
 }
+
+func Test_DirectTextHTML(t *testing.T) {
+	t.Run("Succeeded in directly putting html", func(t *testing.T) {
+		u, err := New("data:text/html,Hello, World!")
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		body, err := Load(u)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(body)
+	})
+}
