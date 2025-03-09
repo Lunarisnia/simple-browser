@@ -12,20 +12,23 @@ import (
 )
 
 type HTTP struct {
-	host            string
-	path            string
-	port            string
-	protocol        string
-	ResponseHeaders map[string]string
+	host       string
+	path       string
+	port       string
+	protocol   string
+	statusCode string
+
+	RespHeaders map[string]string
 }
 
 func NewHTTP(host string, path string, port string, protocol string) *HTTP {
 	return &HTTP{
-		host:            host,
-		path:            path,
-		port:            port,
-		protocol:        protocol,
-		ResponseHeaders: make(map[string]string),
+		host:        host,
+		path:        path,
+		port:        port,
+		protocol:    protocol,
+		statusCode:  "",
+		RespHeaders: make(map[string]string),
 	}
 }
 
@@ -86,6 +89,7 @@ func (h *HTTP) Request() (string, error) {
 	version, statusCode, explanation := statusLine[0], statusLine[1], statusLine[2]
 	// TODO: Put in response struct or something later
 	fmt.Println(version, statusCode, explanation)
+	h.statusCode = statusCode
 
 	i := 1
 	for i < len(responses) {
@@ -96,17 +100,29 @@ func (h *HTTP) Request() (string, error) {
 		}
 		keyVal := strings.SplitN(line, ":", 2)
 		key, value := keyVal[0], keyVal[len(keyVal)-1]
-		h.ResponseHeaders[strings.ToLower(key)] = strings.TrimSpace(value)
+		h.RespHeaders[strings.ToLower(key)] = strings.TrimSpace(value)
 	}
 
-	if _, exist := h.ResponseHeaders["transfer-encoding"]; exist {
+	if _, exist := h.RespHeaders["transfer-encoding"]; exist {
 		return "", errors.ErrUnsupported
 	}
-	if _, exist := h.ResponseHeaders["content-encoding"]; exist {
+	if _, exist := h.RespHeaders["content-encoding"]; exist {
 		return "", errors.ErrUnsupported
 	}
 
 	body := responses[i:]
 
 	return strings.Join(body, ""), nil
+}
+
+func (h *HTTP) StatusCode() string {
+	return h.statusCode
+}
+
+func (h *HTTP) ResponseHeaders() map[string]string {
+	return h.RespHeaders
+}
+
+func (h *HTTP) Protocol() string {
+	return h.protocol
 }

@@ -9,7 +9,7 @@ import (
 
 func main() {
 	// u, err := url.New("data:text/html,&lt;div&gt;;;;")
-	u, err := url.New("view-source:https://example.org")
+	u, err := url.New("http://browser.engineering/redirect3")
 	if err != nil {
 		log.Fatal(err)
 	}

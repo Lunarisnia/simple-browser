@@ -2,6 +2,7 @@ package url
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/Lunarisnia/simple-browser/internal/url/protocols"
@@ -24,6 +25,9 @@ type URL interface {
 	Request() (string, error)
 	Host() string
 	Path() string
+	Protocol() string
+	StatusCode() string
+	ResponseHeaders() map[string]string
 }
 
 func New(rawURL string) (URL, error) {
@@ -120,10 +124,28 @@ func Show(body string) string {
 }
 
 func Load(u URL) (string, error) {
-	content, err := u.Request()
-	if err != nil {
-		return "", err
-	}
+	redirectionLimit := 10
+	redirectionCounter := 0
+	for redirectionCounter < redirectionLimit {
+		content, err := u.Request()
+		if err != nil {
+			return "", err
+		}
+		if u.StatusCode() == "301" {
+			newLocation := u.ResponseHeaders()["location"]
+			if newLocation[0] == '/' {
+				newLocation = u.Protocol() + "://" + u.Host() + newLocation
+				fmt.Println("TRUE: ", newLocation)
+			}
+			u, err = New(newLocation)
+			if err != nil {
+				return "", err
+			}
+			redirectionCounter++
+		} else {
+			return Show(content), nil
+		}
 
-	return Show(content), nil
+	}
+	return "", errors.New("too much redirects")
 }
