@@ -11,7 +11,7 @@ func main() {
 	// u, err := url.New("data:text/html,&lt;div&gt;;;;")
 	// u, err := url.New("http://browser.engineering/http.html")
 	u, err := url.New("https://example.org/index.html")
-	u.SetHeader("Accept-Encoding", "gzip")
+	u.SetHeader("Accept-Encoding", "chunked")
 	if err != nil {
 		log.Fatal(err)
 	}
