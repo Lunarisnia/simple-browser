@@ -107,6 +107,9 @@ func (b *Browser) layout(body string) []*DisplayObject {
 	xStep, yStep := float32(18.0), float32(19.0)
 	cursorX, cursorY := xStep, yStep
 	for _, r := range body {
+		if r == '\n' {
+			cursorY += yStep * 2.0
+		}
 		text := DisplayObject{
 			Char: string(r),
 			X:    cursorX,
