@@ -105,7 +105,7 @@ func parseRawURL(rawURL string) (URL, error) {
 	return parsedURL, nil
 }
 
-func Show(body string) string {
+func Lex(body string) string {
 	parsedBody := ""
 	escapeChar := ""
 	inTag := false
@@ -167,7 +167,7 @@ func Load(u URL) (string, error) {
 					cache.Set(u.Host(), cachePath, maxAge)
 				}
 			}
-			return Show(content), nil
+			return Lex(content), nil
 		}
 
 	}
