@@ -5,6 +5,7 @@ go 1.23.2
 require (
 	fyne.io/fyne/v2 v2.5.4
 	github.com/stretchr/testify v1.10.0
+	github.com/veandco/go-sdl2 v0.4.40
 )
 
 require (
