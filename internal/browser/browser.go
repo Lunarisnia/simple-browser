@@ -1,6 +1,7 @@
 package browser
 
 import (
+	"fmt"
 	"image/color"
 	"log"
 
@@ -49,6 +50,10 @@ func New(width int, height int) *Browser {
 func (b *Browser) Run() {
 	b.mainWindow.Canvas().SetOnTypedKey(func(ke *fyne.KeyEvent) {
 		if ke.Name == fyne.KeyDown {
+			lastObject := b.drawnContent[len(b.drawnContent)-1].object
+			if lastObject.Position().Y <= float32(b.Height) {
+				return
+			}
 			b.Scroll += 18.0
 			for _, drawn := range b.drawnContent {
 				newPos := fyne.NewPos(drawn.originalX, drawn.originalY-b.Scroll)
@@ -56,6 +61,11 @@ func (b *Browser) Run() {
 			}
 		}
 		if ke.Name == fyne.KeyUp {
+			firstObject := b.drawnContent[0].object
+			if firstObject.Position().Y >= float32(b.Height)/8.0 {
+				return
+			}
+			fmt.Println("LAST: ", firstObject.Position().Y)
 			b.Scroll -= 18.0
 			for _, drawn := range b.drawnContent {
 				newPos := fyne.NewPos(drawn.originalX, drawn.originalY-b.Scroll)
