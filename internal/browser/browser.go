@@ -1,7 +1,6 @@
 package browser
 
 import (
-	"fmt"
 	"image/color"
 	"log"
 
@@ -17,12 +16,15 @@ type Browser struct {
 	mainWindow   fyne.Window
 	displayList  []*DisplayObject
 	drawnContent []DrawnObject
-	Width        int
-	Height       int
-	Scroll       float32
+	scrollbar    fyne.CanvasObject
+
+	Width  int
+	Height int
+	Scroll float32
 }
 
 type DrawnObject struct {
+	Type      string
 	originalX float32
 	originalY float32
 	object    fyne.CanvasObject
@@ -50,11 +52,19 @@ func New(width int, height int) *Browser {
 func (b *Browser) Run() {
 	b.mainWindow.Canvas().SetOnTypedKey(func(ke *fyne.KeyEvent) {
 		if ke.Name == fyne.KeyDown {
-			lastObject := b.drawnContent[len(b.drawnContent)-1].object
-			if lastObject.Position().Y <= float32(b.Height) {
+			lastObject := b.drawnContent[len(b.drawnContent)-1]
+			if lastObject.object.Position().Y <= float32(b.Height) {
 				return
 			}
 			b.Scroll += 18.0
+			b.Scroll = min(b.Scroll, lastObject.originalY)
+
+			maxScrollPosition := lastObject.originalY - float32(b.Height)
+			b.scrollbar.Move(fyne.NewPos(b.scrollbar.Position().X, b.Scroll/maxScrollPosition*(float32(b.Height)-b.scrollbar.Size().Height)))
+			if b.scrollbar.Position().Y >= float32(b.Height)-b.scrollbar.Size().Height {
+				b.scrollbar.Move(fyne.NewPos(b.scrollbar.Position().X, float32(b.Height)-b.scrollbar.Size().Height))
+			}
+
 			for _, drawn := range b.drawnContent {
 				newPos := fyne.NewPos(drawn.originalX, drawn.originalY-b.Scroll)
 				drawn.object.Move(newPos)
@@ -65,8 +75,16 @@ func (b *Browser) Run() {
 			if firstObject.Position().Y >= float32(b.Height)/8.0 {
 				return
 			}
-			fmt.Println("LAST: ", firstObject.Position().Y)
-			b.Scroll -= 18.0
+			b.Scroll -= 19.0
+			b.Scroll = max(b.Scroll, 0.0)
+
+			lastObject := b.drawnContent[len(b.drawnContent)-1]
+			maxScrollPosition := lastObject.originalY - float32(b.Height)
+			b.scrollbar.Move(fyne.NewPos(b.scrollbar.Position().X, b.Scroll/maxScrollPosition*(float32(b.Height)-b.scrollbar.Size().Height)))
+			if b.scrollbar.Position().Y >= float32(b.Height)-b.scrollbar.Size().Height {
+				b.scrollbar.Move(fyne.NewPos(b.scrollbar.Position().X, float32(b.Height)-b.scrollbar.Size().Height))
+			}
+
 			for _, drawn := range b.drawnContent {
 				newPos := fyne.NewPos(drawn.originalX, drawn.originalY-b.Scroll)
 				drawn.object.Move(newPos)
@@ -102,6 +120,13 @@ func (b *Browser) Draw() {
 		})
 	}
 
+	scrollbar := canvas.NewRectangle(color.White)
+	scrollbar.Resize(fyne.NewSize(100.0, 100.0))
+	scrollbar.Move(fyne.NewPos(float32(b.Width)-105.0, 0.0))
+	b.scrollbar = scrollbar
+
+	content.Add(scrollbar)
+
 	b.mainWindow.SetContent(content)
 }
 
@@ -127,7 +152,8 @@ func (b *Browser) layout(body string) []*DisplayObject {
 		}
 		displayList = append(displayList, &text)
 		cursorX += xStep
-		if cursorX >= float32(b.Width)-xStep {
+		lastCharacterOnRow := float32(b.Width) - xStep
+		if cursorX >= lastCharacterOnRow-100.0 {
 			cursorY += yStep
 			cursorX = xStep
 		}
