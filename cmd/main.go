@@ -23,7 +23,8 @@ func main() {
 	// // fmt.Println("Content: ", content)
 
 	ignis := browser.New(800, 600)
-	u, err := url.New("https://browser.engineering/examples/xiyouji.html")
+	// u, err := url.New("https://browser.engineering/examples/xiyouji.html")
+	u, err := url.New("data:text/html,hello there")
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -124,6 +124,10 @@ func (b *Browser) Draw() {
 	scrollbar.Resize(fyne.NewSize(100.0, 100.0))
 	scrollbar.Move(fyne.NewPos(float32(b.Width)-105.0, 0.0))
 	b.scrollbar = scrollbar
+	lastObject := b.drawnContent[len(b.drawnContent)-1]
+	if lastObject.originalY < float32(b.Height) {
+		b.scrollbar.Hide()
+	}
 
 	content.Add(scrollbar)
 
