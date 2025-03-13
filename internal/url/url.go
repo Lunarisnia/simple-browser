@@ -57,6 +57,8 @@ func parseRawURL(rawURL string) (URL, error) {
 		scheme = strings.SplitN(rawURL, ":", 2)
 		clientProtocol = scheme[0]
 		scheme = strings.SplitN(scheme[len(scheme)-1], "://", 2)
+	} else if rawURL == "about:blank" {
+		scheme = []string{"data", "text/html, "}
 	} else {
 		scheme = strings.SplitN(rawURL, "://", 2)
 	}
@@ -71,7 +73,7 @@ func parseRawURL(rawURL string) (URL, error) {
 	}
 
 	if protocol == "data" {
-		scheme = strings.SplitN(rawURL, ",", 2)
+		scheme = strings.SplitN(scheme[len(scheme)-1], ",", 2)
 		parsedURL := protocols.NewHTTP(scheme[0], scheme[len(scheme)-1], "", protocol)
 		return parsedURL, nil
 	}
